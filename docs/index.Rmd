@@ -74,17 +74,47 @@ The BuffColony options have an important effect on the resulting trip dataset. T
 
 Below an example of sensitivity of the response over a serie of radius scenario.In that example, the optimal radius has been chosen as XXX km. Using the second order rate of change (SORC), this scenario revealed to have an absolute variation of less than 5% of the maximum average value of the scenario tested (i.e. ca. 13.7, corresponding to a SORC of < 13.7*0.05)
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=F, message=FALSE, warning=FALSE, out.width="80%", fig.align="center"}
 
 knitr::include_graphics("sc_plot.png")
 
 ```
 Which parameters selection is highly dependable of the species under investigation and its relative behavior. The function has in total 5 filtering options, which will impact to a varying extent the final outputs:
 
-Speed filtering is available (see speedTresh) and will remove locations associated to a upper speed level. The function use the function developped by Freitas et al. 2008 from the package “argosfilter”. This function is itself based on the approach suggested by McConnell et al. 2002, except in case where the relevant point is wihtin a distance of 5 km from the previous fix. See references in the ?filt() documentation
-Minimum trip length is a parameter to filterate very small trips, corresponding to bathing trip, resting at some distance of the colony or visiting neighbors. This parameter is in minutes (see MinTripDur).
-One can filterate trip as function of the number of points generated after interpolation. In other words, many tracks have many missing points and a tracks composed from 90% interpolatde points might not have the same representativity than another one that have only 10%. This function let user to disciminate based on a certain treshold (see filtNA)
+- Speed filtering is available (see speedTresh) and will remove locations associated to a upper speed level. The function use the function developped by Freitas et al. 2008 from the package “argosfilter”. This function is itself based on the approach suggested by McConnell et al. 2002, except in case where the relevant point is wihtin a distance of 5 km from the previous fix. See references in the ?filt() documentation
+- Minimum trip length is a parameter to filterate very small trips, corresponding to bathing trip, resting at some distance of the colony or visiting neighbors. This parameter is in minutes (see MinTripDur).
+- One can filterate trip as function of the number of points generated after interpolation. In other words, many tracks have many missing points and a tracks composed from 90% interpolatde points might not have the same representativity than another one that have only 10%. This function let user to disciminate based on a certain treshold (see filtNA)
 
+### Filtering example
+
+One could also based his/her filtering parameterization based on the frequency histograms. In the case of the *filtNA* argument, one could set **filtNA = 1** and run;
+
+```{r, echo=T, message=FALSE, warning=FALSE, eval=F}
+
+f <- filt(pathF, pathM, metname, timezone, speedTresh = 90, gpst = "GPSType",
+        ddep = "deployment", drecap = "recapture", colony = "colony", year = "year",
+        ring = "ring", FIX = "FIX", tdep = "utc_deployment", trecap = "utc_retrieval",
+        BuffColony = 0.15, MinTripDur = 30, Complete = T, FixInt = 2,
+        Interpolate = T, filtNA = 1, metINFO = c("ring", "year", "species", "colony"), splt = F)
+
+```
+
+and then;
+
+```{r, echo=T, message=FALSE, warning=FALSE, eval=F}
+
+hist(f$propNA, main ="", xlab="Proportion of NAs following interpolation")
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, out.width="50%", fig.align="center"}
+
+knitr::include_graphics("PropNAs_plot.png")
+
+```
+ 
+whereas the y-axis represent the number of unique trips in the dataset. From that figure, one could thus decide of the appropriate "arbitrarily" treshold to consider (*e.g.* using **filtNA = 0.8** would remove all trips that have a proportion of NAs => 0.8)
+ 
 Finally, on can also filterate as function of the completeness of the tracks (see Complete). Depending of the question and data representation, one could decide to only use complete trips for his/her analyses
 Interpolation is executed by adehabitatLT::redisltraj().If you want to add additional data to the final objects, these one needs to could be easily attached from the metadata, using the metINFO = c(“ring”, “year”, “colony”) object. The option splt let you split the final object into an array instead of a data frame. In case the splt is set to TRUE, the object can be unsplitted thereafter using do.call(rbind, object)
 
