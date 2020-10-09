@@ -65,21 +65,22 @@ f <- filt(pathF, pathM, metname, timezone, speedTresh = 22.222, gpst = "GPSType"
 
 ```
 
-The main purpose of this package is to facilitate the delineation of foraging trips from raw GPS data.Trip delineation is however a relatively flexible procedure and rely essentially on how we define “spatially” the colony.
+The main purpose of this package is to facilitate the delineation of foraging trips from raw GPS data.Trip delineation is however a relatively flexible procedure and rely essentially on how we define *spatially* the colony.
 
-The colony radius is the main parameter for delineation (see BuffColony). In other words, this treshold (km) is used to build an area around the colony’s centroid. From that area, all locations falling inside will be categorized as “colony” locations and those falling outside as “trip” ones. This binary category will thereafter be used for segmenting each foraging trip, i.e. having the last point in the colony before departure and the first point at the colony at arrival
+The colony radius is the main parameter for delineation (see **BuffColony**). In other words, this treshold (km) is used to build an area around the colony’s centroid. From that area, all locations falling inside will be categorized as *colony* locations and those falling outside as *trip* ones. This binary category will thereafter be used for segmenting each foraging trip, *i.e.* having the last point in the colony before departure and the first point at the colony at arrival
 
 ### Investigating effect of filtering options
 
 The BuffColony options have an important effect on the resulting trip dataset. This package has two functions for investigating such effect. These functions are essentially bootstrap where variation within scenario are computed. These normally described a decaying function of the number of final trips along increment of the radius size of the colony and the minimal duration that a trip should have. The second rate of change is also computed, among means of the different bootstrapping scenario. User can thus decide of a certain treshold to show where the variation among scenario “stabilize”.
 
-Below an example of sensitivity of the response over a serie of radius scenario.In that example, the optimal radius has been chosen as XXX km. Using the second order rate of change (SORC), this scenario revealed to have an absolute variation of less than 5% of the maximum average value of the scenario tested (i.e. ca. 13.7, corresponding to a SORC of < 13.7*0.05)
+Below an example of sensitivity of the response over a serie of radius scenario.In that example, the optimal radius has been chosen as 250m. Using the second order rate of change (SORC), this scenario revealed to have an absolute variation of less than 5% of the maximum average value of the scenario tested (i.e. ca. 13.7, corresponding to a SORC of < (13.7*0.05)
 
 ```{r, echo=F, message=FALSE, warning=FALSE, out.width="80%", fig.align="center"}
 
 knitr::include_graphics("sc_plot.png")
 
 ```
+
 Which parameters selection is highly dependable of the species under investigation and its relative behavior. The function has in total 5 filtering options, which will impact to a varying extent the final outputs:
 
 - Speed filtering is available (see **speedTresh**) and will remove locations associated to a upper speed level. The function use the function developped by Freitas *et al.* 2008 from the package “argosfilter”. This function is itself based on the approach suggested by McConnell *et al.* 2002, except in case where the relevant point is wihtin a distance of 5 km from the previous fix. See references in the **?filt()** documentation
@@ -124,78 +125,20 @@ knitr::include_graphics("PropNAs_plot.png")
  
 whereas the y-axis represent the number of unique trips in the dataset. From that figure, one could thus decide of the appropriate "arbitrarily" treshold to consider (*e.g.* using **filtNA = 0.8** would remove all trips that have a proportion of NAs => 0.8)
  
-Finally, on can also filterate as function of the completeness of the tracks (see Complete). Depending of the question and data representation, one could decide to only use complete trips for his/her analyses
-Interpolation is executed by adehabitatLT::redisltraj().If you want to add additional data to the final objects, these one needs to could be easily attached from the metadata, using the metINFO = c(“ring”, “year”, “colony”) object. The option splt let you split the final object into an array instead of a data frame. In case the splt is set to TRUE, the object can be unsplitted thereafter using do.call(rbind, object)
+Finally, on can also filterate as function of the completeness of the tracks (see **Complete**). Depending of the question and data representation, one could decide to only use complete trips for his/her analyses
+Interpolation is executed by *adehabitatLT::redisltraj()*. If you want to add additional data to the final objects, these one needs to could be easily attached from the metadata, using the **metINFO = c(“ring”, “year”, “colony”)** argument The option splt let you split the final object into an array instead of a data frame. In case the **splt** is set to **TRUE**, the object can be unsplitted thereafter using **do.call(rbind, object)**
 
 ## Plotting the delineated trips
   
-The script has now produced one object containing the segmented trips. One way to visualize those trips is to pass them into the plottingMAP() function;
+The script has now produced one object containing the segmented trips. One way to visualize those trips is to pass them into the **plottingMAP()** function;
 
-Using object from CPFmove class, the function plots each trip with the colony (blue) distinctive of the trip’s locations (purple). The function use the basemap() from the ggOceanMaps package in its pipeline. If mulitple trips are given, the function will make
+Using object from CPFmove class, the function plots each trip with the colony (blue) distinctive of the trip’s locations (purple). The function use the **basemap()** from the *ggOceanMaps* package in its pipeline. If mulitple trips are given, the function will make
 
-The script codes now for plotting only the first bird from the splitted object (see splt object from the filt());
+The script codes now for plotting only the first bird from the splitted object (see **splt** object from the **filt()**);
 
 ```{r, echo= F, results = "hide", message=FALSE, warning=FALSE}
 
-plotMAP <- function(allbirds, pmap = FALSE, path = NULL, w = 12, h = 12,
-                units = "cm", ColLong = NULL, ColLat = NULL) {
-  
-  if (is.null(path))
-    stop("path? You need to indicate where to save the figures")
-  
-  pack <- c("ggOceanMaps", "ggplot2", "ggspatial")
-  
-  if (length(setdiff(pack, rownames(installed.packages()))) > 0) {
-    install.packages(setdiff(pack, rownames(installed.packages())))  
-  }
-  
-  sapply(pack, function(p) {require(p, quietly=T, character.only = T)})
-  
-  allbirds <- do.call(rbind, allbirds)
-  
-  for(i in 1:length(unique(allbirds$birdTrip))){
-    
-    bt <- unique(allbirds$birdTrip)[i]
-    
-    bird <- subset(allbirds, allbirds$birdTrip == bt)
-    
-   if (is.null(ColLong) | is.null(ColLat)) {
-    warning("You have no coordinate associated to your colony. Location will be automatically picked up from your dataset")
-    
-    ColonyPos <- subset(bird, bird$ColonyorTrip == "colony")
-     
-    m <- basemap(limits = c(min(bird$Longitude), max(bird$Longitude), 
-          min(bird$Latitude), max(bird$Latitude)), bathymetry = TRUE, 
-          glaciers = TRUE, bathy.style = "poly_greys") +
-        geom_spatial_path(data = bird, aes(x = Longitude, y = Latitude), color = "light gray") +
-        geom_spatial_point(data = bird, aes(x = Longitude, y = Latitude), color = "purple") +
-        geom_spatial_point(data = ColonyPos[1, ], aes(x = Longitude, y = Latitude), color = "blue")
-    
-    } else {
-      
-    m <- basemap(limits = c(min(bird$Longitude), max(bird$Longitude), 
-          min(bird$Latitude), max(bird$Latitude)), bathymetry = TRUE, 
-          glaciers = TRUE, bathy.style = "poly_greys") +
-        geom_spatial_path(data = bird, aes(x = Longitude, y = Latitude), color = "light gray") +
-        geom_spatial_point(data = bird, aes(x = Longitude, y = Latitude), color = "purple") +
-        geom_spatial_point(data = bird, aes(x = ColLong[1], y = ColLat[1]), color = "blue")
-      
-    }
-    
-    g <- paste0('MAP_', bt, '.png')
-    ggsave(m, filename = g, bg = "transparent", path = path, width = w, height = h, units = units) 
-    
-    if(pmap == TRUE){ return(m + ggtitle(g))}
-    
-    ColonyPos <- NULL
-    
-    } 
-}
+
 
 ```
 
-```{r, echo=F, message=FALSE, warning=FALSE}
-
-path <- c("C:/Users/philip/Desktop/test")
-
-```
