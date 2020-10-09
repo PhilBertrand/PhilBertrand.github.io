@@ -17,7 +17,9 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+
 knitr::opts_chunk$set(echo = TRUE, warnings = FALSE, message = FALSE)
+
 ```
 
 This document is intended to provide basic information on how to use the CPFMove functions. This package is designed to work with raw GPS data and especially for species showing a central-place foraging behavior (CPF *i.e.* tendancy to an animal to leave and return to a fixed based between foraging trips, rather than being in constant roaming). The package has three main objectives:
@@ -48,12 +50,14 @@ The algortihm rely on a local metadata file that contains the information necess
 - **UTC_Retrieval**: Standardized time of the recapture (UTC recommended)
 
 ```{r cars, message=FALSE, warning=FALSE}
+
 head(metafile)
+
 ```
 
 ## Trip Delineation
 
-Trip delineation is performed via the **filt()** function. The function has many arguments which among those, 5 has filtering effect (see **?filt()** for the corresponding details);
+Trip delineation is performed via the `filt()` function. The function has many arguments which among those, 5 has filtering effect (see `?filt()` for the corresponding details);
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
 
@@ -65,7 +69,7 @@ f <- filt(pathF, pathM, metname, timezone, speedTresh = 22.222, gpst = "GPSType"
 
 ```
 
-The main purpose of this package is to facilitate the delineation of foraging trips from raw GPS data.Trip delineation is however a relatively flexible procedure and rely essentially on how we define *spatially* the colony.
+The main purpose of this package is to facilitate the delineation of foraging trips from raw GPS data.Trip delineation is however a relatively flexible procedure and rely essentially on how we define "spatially" the colony.
 
 The colony radius is the main parameter for delineation (see **BuffColony**). In other words, this treshold (km) is used to build an area around the colony’s centroid. From that area, all locations falling inside will be categorized as *colony* locations and those falling outside as *trip* ones. This binary category will thereafter be used for segmenting each foraging trip, *i.e.* having the last point in the colony before departure and the first point at the colony at arrival
 
@@ -73,11 +77,22 @@ The colony radius is the main parameter for delineation (see **BuffColony**). In
 
 The **BuffColony** argument have an important effect on the resulting trip dataset. This package has one function for investigating such effect. 
 
-> 1) SensCol()
+> SensCol()
 
-This is a bootstrap function for estimating the variation within and among customized scenarios. Here, scenarios are a sequence of buffer radii (km). These normally described a decaying function of the number of final trips along increment of the radius size of the colony and the minimal duration that a trip should have. The second rate of change is also computed, among means of the different bootstrapping scenario. User can thus decide of a certain treshold to show where the variation among scenario “stabilize”.
+This is a bootstrap function for estimating the variation within and among customized scenarios. Here, scenarios are a sequence of buffer radii (km). These normally described a decaying function of the number of final trips along increment of the radius size of the colony and the minimal duration that a trip should have. The second rate of change is also computed, among means of the different bootstrapping scenario. User can thus decide of a certain treshold to show where the variation among scenario “stabilize”. In this function (see below) **iter** correspond to the number of bootsrap iterations
 
-Below an example of sensitivity of the response over a serie of radius scenario.In that example, the optimal radius has been chosen as 250m. Using the second order rate of change (SORC), this scenario revealed to have an absolute variation of less than 5% of the maximum average value of the scenario tested (i.e. ca. 13.7, corresponding to a SORC of < (13.7*0.05)
+```{r, echo=T, message=FALSE, warning=FALSE, eval=F}
+
+param <- seq(0.05, 1, by = 0.05) ## Radii in kilometers
+
+sc <- sensCol(pathF, pathM, metname, timezone, iter = 300, param = param, speedTresh = 90,
+          gpst = "GPSType", ddep = "deployment", drecap = "recapture", colony = "colony",
+          year = "year", ring = "ring", FIX = "FIX", tdep = "utc_deployment", trecap = "utc_retrieval",
+          FixInt = 2, Interpolate = T)
+
+```
+
+Below an example of sensitivity of the response over a serie of radius scenario.In that example, the optimal radius has been chosen as 250m. This parameter could therefore be used in the `filt()` function in the **BuffColony** argument. Using the second order rate of change (SORC), this scenario revealed to have an absolute variation of less than 5% of the maximum average value of the scenario tested (i.e. ca. 13.7, corresponding to a SORC of < (13.7*0.05)
 
 ```{r, echo=F, message=FALSE, warning=FALSE, out.width="80%", fig.align="center"}
 
@@ -85,11 +100,11 @@ knitr::include_graphics("sc_plot.png")
 
 ```
 
-Which parameters selection is highly dependable of the species under investigation and its relative behavior. The function has in total 5 filtering options, which will impact to a varying extent the final outputs:
+Parameters selection is highly dependable of the species under investigation and its relative behavior. The function has in total 5 filtering options, which will impact to a varying extent the final outputs:
 
-- Speed filtering is available (see **speedTresh**) and will remove locations associated to a upper speed level. The function use the function developped by Freitas *et al.* 2008 from the package “argosfilter”. This function is itself based on the approach suggested by McConnell *et al.* 2002, except in case where the relevant point is wihtin a distance of 5 km from the previous fix. See references in the **?filt()** documentation
-- Minimum trip length is a parameter to filterate very small trips, corresponding to bathing trip, resting at some distance of the colony or visiting neighbors. This parameter is in minutes (see **MinTripDur**).
+- Speed filtering is available (see **speedTresh**) and will remove locations associated to a upper speed level. The function use the function developped by Freitas *et al.* 2008 from the package “argosfilter”. This function is itself based on the approach suggested by McConnell *et al.* 2002, except in case where the relevant point is wihtin a distance of 5 km from the previous fix. See references in the `?filt()` documentation
 - One can filterate trip as function of the number of points generated after interpolation. In other words, many tracks have many missing points and a tracks composed from 90% interpolatde points might not have the same representativity than another one that have only 10%. This function let user to disciminate based on a certain treshold (see **filtNA**)
+- Minimum trip length is a parameter to filterate very small trips, corresponding to bathing trip, resting at some distance of the colony or visiting neighbors. This parameter is in minutes (see **MinTripDur**). Another function, named `SensTime()` works the same as the `SensCol()` but aims to evaluate the sensitivity of the results as function of different minimum time thresold that a trip should have. See `?SensTime()` for more details
 
 #### Filtering example
 
@@ -100,8 +115,23 @@ One could also based his/her filtering parameterization based on the frequency h
 f <- filt(pathF, pathM, metname, timezone, speedTresh = 90, gpst = "GPSType",
         ddep = "deployment", drecap = "recapture", colony = "colony", year = "year",
         ring = "ring", FIX = "FIX", tdep = "utc_deployment", trecap = "utc_retrieval",
-        BuffColony = 0.15, MinTripDur = 30, Complete = T, FixInt = 2,
+        BuffColony = 0.25, MinTripDur = 30, Complete = T, FixInt = 2,
         Interpolate = T, filtNA = 1, metINFO = c("ring", "year", "species", "colony"), splt = F)
+
+```
+
+this function will give the following object;
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+load("C:/Users/philip//OneDrive/NP_Kontrakt/StromTracks/files/allspecies/data/f_allbirds.RData")
+f <- f[, -c(18:21)]
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+
+head(f)
 
 ```
 
@@ -130,19 +160,34 @@ knitr::include_graphics("PropNAs_plot.png")
 whereas the y-axis represent the number of unique trips in the dataset. From that figure, one could thus decide of the appropriate "arbitrarily" treshold to consider (*e.g.* using **filtNA = 0.8** would remove all trips that have a proportion of NAs => 0.8)
  
 Finally, on can also filterate as function of the completeness of the tracks (see **Complete**). Depending of the question and data representation, one could decide to only use complete trips for his/her analyses
-Interpolation is executed by *adehabitatLT::redisltraj()*. If you want to add additional data to the final objects, these one needs to could be easily attached from the metadata, using the **metINFO = c(“ring”, “year”, “colony”)** argument The option splt let you split the final object into an array instead of a data frame. In case the **splt** is set to **TRUE**, the object can be unsplitted thereafter using **do.call(rbind, object)**
+Interpolation is executed by `adehabitatLT::redisltraj()`. If you want to add additional data to the final objects, these one needs to could be easily attached from the metadata, using the `metINFO = c(“ring”, “year”, “colony”)` argument The option splt let you split the final object into an array instead of a data frame. In case the **splt** is set to **TRUE**, the object can be unsplitted thereafter using `do.call(rbind, object)`
+
+The script has now produced one object containing the segmented trips. One way to visualize those trips is to pass them into the `plottingMAP()` function;
 
 ## Plotting the delineated trips
   
-The script has now produced one object containing the segmented trips. One way to visualize those trips is to pass them into the **plottingMAP()** function;
+Using the previous object from the `filt()` function, the `plottingMAP()` function plots each trip, along with the colony and the trip’s locations (*blue = colony; purple = trip locations*). The function use the `basemap()` from the [ggOceanMaps](https://mikkovihtakari.github.io/ggOceanMaps/) package in its pipeline. If mulitple trips are given, the function will make one figure per trip
 
-Using object from CPFmove class, the function plots each trip with the colony (blue) distinctive of the trip’s locations (purple). The function use the **basemap()** from the *ggOceanMaps* package in its pipeline. If mulitple trips are given, the function will make
+A path should first be declared, for instance;
 
-The script codes now for plotting only the first bird from the splitted object (see **splt** object from the **filt()**);
+```{r, echo= T, message=FALSE, warning=FALSE}
 
-```{r, echo= F, results = "hide", message=FALSE, warning=FALSE}
-
-
+path <- c("C:/Users/Desktop/map")
 
 ```
 
+The following script codes now for plotting only the first bird from the splitted object (see **splt** object from the `filt()`);
+
+```{r, echo= T, message=FALSE, warning=FALSE, eval = F}
+
+plotMAP(f[1], pmap = F, path = path, ColLong = f[1]$ColLong, ColLat = f[1]$ColLat)
+
+```
+
+Giving the following output;
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, out.width="70%", fig.align="center"}
+
+knitr::include_graphics("picture1.png")
+
+```
