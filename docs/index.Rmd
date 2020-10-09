@@ -53,7 +53,7 @@ head(metafile)
 
 ## Trip Delineation
 
-Trip delineation is performed via the filt() function. The function has many arguments which among those, 5 has filtering effect (see ?filt() for the corresponding details);
+Trip delineation is performed via the **filt()** function. The function has many arguments which among those, 5 has filtering effect (see **?filt()** for the corresponding details);
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
 
@@ -71,7 +71,11 @@ The colony radius is the main parameter for delineation (see **BuffColony**). In
 
 ### Investigating effect of filtering options
 
-The BuffColony options have an important effect on the resulting trip dataset. This package has two functions for investigating such effect. These functions are essentially bootstrap where variation within scenario are computed. These normally described a decaying function of the number of final trips along increment of the radius size of the colony and the minimal duration that a trip should have. The second rate of change is also computed, among means of the different bootstrapping scenario. User can thus decide of a certain treshold to show where the variation among scenario “stabilize”.
+The **BuffColony** argument have an important effect on the resulting trip dataset. This package has one function for investigating such effect. 
+
+> 1) SensCol()
+
+This is a bootstrap function for estimating the variation within and among customized scenarios. Here, scenarios are a sequence of buffer radii (km). These normally described a decaying function of the number of final trips along increment of the radius size of the colony and the minimal duration that a trip should have. The second rate of change is also computed, among means of the different bootstrapping scenario. User can thus decide of a certain treshold to show where the variation among scenario “stabilize”.
 
 Below an example of sensitivity of the response over a serie of radius scenario.In that example, the optimal radius has been chosen as 250m. Using the second order rate of change (SORC), this scenario revealed to have an absolute variation of less than 5% of the maximum average value of the scenario tested (i.e. ca. 13.7, corresponding to a SORC of < (13.7*0.05)
 
