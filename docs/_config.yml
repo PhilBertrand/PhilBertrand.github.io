@@ -1,11 +1,11 @@
 name: "README"
 output_dir: "docs"
 navbar:
-  title: "Introduction"
+  title: "README"
   left:
   - text: "Home"
-   href: CPFReadme.html
-  - text: "CPF Introduction"
+   href: README.html
+  - text: "CPFMove Introduction"
    href: README.html
 output:
   html_document:
