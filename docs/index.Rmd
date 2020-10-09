@@ -7,6 +7,8 @@
 
 ---
 title: "CPFMove Introduction"
+author: Philip Bertrand, PhD Candidate - SEAPOP & Norwegian Polar INstitute
+date: 2020-10-09
 description: |
   Scientific and technical writing, native to the web
 output:
@@ -18,12 +20,12 @@ output:
 knitr::opts_chunk$set(echo = TRUE, warnings = FALSE, message = FALSE)
 ```
 
-This document is intended to provide basic information on how to use the CPFMove functions. This package is designed to work with raw GPS data and especially for species showing a central-place foraging behavior (CPF i.e. tendancy to an animal to leave and return to a fixed based between foraging trips, rather than being in constant roaming). The package has three main objectives:
+This document is intended to provide basic information on how to use the CPFMove functions. This package is designed to work with raw GPS data and especially for species showing a central-place foraging behavior (CPF *i.e.* tendancy to an animal to leave and return to a fixed based between foraging trips, rather than being in constant roaming). The package has three main objectives:
 
-Falilitating the delineation of trip from raw GPS data for CPF species
-Offering basic tools for filtering/enhancing the quality of the trips
-Offering basic diagnostic tools for parameter selection
-Offering a basic plotting function to visually assessed the reliability of delineated tracks
+> 1) Falilitating the delineation of trip from raw GPS data for CPF species
+> 2) Offering basic tools for filtering/enhancing the quality of the trips
+> 3) Offering basic diagnostic tools for parameter selection
+> 4) Offering a basic plotting function to visually assessed the reliability of delineated tracks
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 pathM <- c("C:/Users/philip/OneDrive/NP_Kontrakt/R/DummyMeta/")
